@@ -676,7 +676,23 @@ function finalize(){
 }
 
 // === PDF ===
-function strip(t){return(t||'').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim()}
+function strip(t) {
+  return (t || '')
+    // 1. Reemplazar caracteres especiales que rompen jsPDF
+    .replace(/→/g, '->')
+    .replace(/—/g, '-')
+    // 2. Eliminar etiquetas HTML de la interfaz (¡y preservar textos clave como <class 'int'>!)
+    .replace(/<\/?(strong|code|ol|li|div|span|br)[^>]*>/gi, '')
+    // 3. Convertir entidades HTML a texto normal
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    // 4. Limpiar cualquier otro carácter Unicode > 255 por seguridad (ej. emojis)
+    .replace(/[^\x00-\xFF]/g, '')
+    // 5. Normalizar múltiples espacios
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 function makePDF(res){
   const{jsPDF}=window.jspdf;
@@ -693,7 +709,7 @@ function makePDF(res){
   doc.setTextColor(255);doc.setFontSize(18);doc.setFont(undefined,'bold');
   doc.text('EXAMEN DE PERIODO 1',W/2,13,{align:'center'});
   doc.setFontSize(11);doc.setFont(undefined,'normal');
-  doc.text('Ciencias de la Computacion — Estructuras de Datos',W/2,21,{align:'center'});
+  doc.text('Ciencias de la Computacion - Estructuras de Datos',W/2,21,{align:'center'});
   doc.setFontSize(8);
   doc.text('COEDUCA | Prof. Jose Eliseo Martinez | Vale 25% del periodo | 12 preguntas | 100 puntos',W/2,29,{align:'center'});
   y=42;
@@ -728,7 +744,7 @@ function makePDF(res){
     doc.setFontSize(8);doc.setTextColor(120,90,0);doc.setFont(undefined,'bold');
     doc.text('Respuesta del estudiante:',ML+3,y);y+=4;
     doc.setFont(undefined,'normal');doc.setTextColor(50);
-    const sal=doc.splitTextToSize(r.sa,CW-8);
+    const sal=doc.splitTextToSize(strip(r.sa),CW-8);
     chk(sal.length*3.5+20);
     doc.setFillColor(255,252,235);doc.roundedRect(ML+2,y-2,CW-4,sal.length*3.5+4,1,1,'F');
     doc.text(sal,ML+4,y+1.5);y+=sal.length*3.5+5;
